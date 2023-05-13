@@ -1,0 +1,22 @@
+{
+  "name": "kabutan-scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tsconfig/node-lts": "latest",
+    "@types/cheerio": "latest",
+    "prettier": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
+  },
+  "dependencies": {
+    "axios": "latest",
+    "cheerio": "latest",
+    "csv-stringify": "latest",
+    "dotenv": "latest"
+  }
+}
