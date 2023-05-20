@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "init": "echo CSV_DIRECTORY=\"./Kabutan\" > ./.env",
+    "scrape": "ts-node ./kabutan-scraper.ts"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -16,6 +19,7 @@
   "dependencies": {
     "axios": "latest",
     "cheerio": "latest",
+    "csv-parse": "latest",
     "csv-stringify": "latest",
     "dotenv": "latest"
   }
