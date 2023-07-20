@@ -351,20 +351,6 @@ function parseStockFinancial(
   financial.YoYForecastEarningsPerShare = YoYForecasts.eq(5).text().trim();
 
   const YoY = $("#finance_box")
-    .find("table")
-    .find("tbody")
-    .find("tr")
-    .find("th:contains('前年比')")
-    .parent()
-    .children();
-
-  financial.YoYNetSales = YoY.eq(1).text().trim();
-  financial.YoYOperatingProfit = YoY.eq(2).text().trim();
-  financial.YoYOrdinaryProfit = YoY.eq(3).text().trim();
-  financial.YoYProfit = YoY.eq(4).text().trim();
-  financial.YoYEarningsPerShare = YoY.eq(5).text().trim();
-
-  const QoQ = $("#finance_box")
     .find("div.fin_quarter_t0_d.fin_quarter_result_d")
     .find("table")
     .find("tbody")
@@ -373,11 +359,11 @@ function parseStockFinancial(
     .parent()
     .children();
 
-  financial.QoQNetSales = QoQ.eq(1).text().trim();
-  financial.QoQOperatingProfit = QoQ.eq(2).text().trim();
-  financial.QoQOrdinaryProfit = QoQ.eq(3).text().trim();
-  financial.QoQProfit = QoQ.eq(4).text().trim();
-  financial.QoQEarningsPerShare = QoQ.eq(5).text().trim();
+  financial.YoYNetSales = YoY.eq(1).text().trim();
+  financial.YoYOperatingProfit = YoY.eq(2).text().trim();
+  financial.YoYOrdinaryProfit = YoY.eq(3).text().trim();
+  financial.YoYProfit = YoY.eq(4).text().trim();
+  financial.YoYEarningsPerShare = YoY.eq(5).text().trim();
 
   formatFinancial(financial);
 
