@@ -3,13 +3,16 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 
 // npm
-import axios, { AxiosResponse } from "axios";
+import { AxiosResponse } from "axios";
 import * as cheerio from "cheerio";
 import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
 import * as dotenv from "dotenv";
 
-// TypeScript
+// src
+import { KabutanHttpClient } from "./kabutan-http-client";
+
+// types
 import { Stock, StockInfo, StockFinancial } from "../types/types";
 
 main();
@@ -207,8 +210,8 @@ async function getStockFinancials(
 }
 
 async function scrapeKabutanStockInfo(stock: Stock): Promise<Stock | null> {
-  const url = `https://kabutan.jp/stock/?code=${stock.info.code}`;
-  const response = await getAxiosResponse(url, 1);
+  const client = new KabutanHttpClient(stock.info.code);
+  const response = await client.getKabutanResponse();
   if (response === null) {
     return null;
   }
@@ -223,8 +226,8 @@ async function scrapeKabutanStockInfo(stock: Stock): Promise<Stock | null> {
 async function scrapeKabutanStockFinancial(
   stock: Stock
 ): Promise<Stock | null> {
-  const url = `https://kabutan.jp/stock/finance?code=${stock.info.code}`;
-  const response = await getAxiosResponse(url, 1);
+  const client = new KabutanHttpClient(stock.info.code);
+  const response = await client.getKabutanFinanceResponse();
   if (response === null) {
     return null;
   }
@@ -234,36 +237,6 @@ async function scrapeKabutanStockFinancial(
   }
   stock.financial = financial;
   return stock;
-}
-
-async function getAxiosResponse(
-  url: string,
-  count: number
-): Promise<AxiosResponse<any, any> | null> {
-  try {
-    const response = await axios.get(url);
-    return response;
-  } catch (error: any) {
-    if (error instanceof axios.AxiosError) {
-      switch (error.response?.status.toString()[0]) {
-        case "5":
-          // サーバーエラーの場合、最大5回のリクエストを実行する
-          if (count > 5) {
-            return null;
-          }
-          await new Promise((resolve) =>
-            setTimeout(resolve, count * 10 * 1000)
-          );
-          console.log(`リクエスト${count + 1}回目 "${url}"`);
-
-          const response = await getAxiosResponse(url, count + 1);
-          return response;
-        default:
-          return null;
-      }
-    }
-    throw new Error(`Failed to get data: ${error.message}`);
-  }
 }
 
 // HTML解析処理関連
