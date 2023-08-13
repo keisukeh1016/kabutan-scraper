@@ -1,10 +1,16 @@
+// Node.js
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+
+// npm
 import axios, { AxiosResponse } from "axios";
 import * as cheerio from "cheerio";
 import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
 import * as dotenv from "dotenv";
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
+
+// TypeScript
+import { Stock, StockInfo, StockFinancial } from "../types/types";
 
 main();
 async function main() {
@@ -24,36 +30,6 @@ async function main() {
   // 株探情報を出力
   await outputCSV(filename, stocks);
 }
-
-// TypeScript関連
-type Stock = {
-  info: StockInfo;
-  financial: StockFinancial;
-};
-
-type StockInfo = {
-  code: string;
-  name: string;
-  market: string;
-};
-
-type StockFinancial = {
-  YoYForecastNetSales: string;
-  YoYForecastOperatingProfit: string;
-  YoYForecastOrdinaryProfit: string;
-  YoYForecastProfit: string;
-  YoYForecastEarningsPerShare: string;
-  YoYNetSales: string;
-  YoYOperatingProfit: string;
-  YoYOrdinaryProfit: string;
-  YoYProfit: string;
-  YoYEarningsPerShare: string;
-  QoQNetSales: string;
-  QoQOperatingProfit: string;
-  QoQOrdinaryProfit: string;
-  QoQProfit: string;
-  QoQEarningsPerShare: string;
-};
 
 function newStock(): Stock {
   const stock: Stock = {
