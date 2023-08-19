@@ -10,7 +10,8 @@ import { stringify } from "csv-stringify/sync";
 import * as dotenv from "dotenv";
 
 // src
-import { KabutanHttpClient } from "./kabutan-http-client";
+import { KabutanFinanceHttpClient } from "./kabutan-http-client/kabutan-finance-http-client";
+import { KabutanTopHttpClient } from "./kabutan-http-client/kabutan-top-http-client";
 
 // types
 import { Stock, StockInfo, StockFinancial } from "../types/types";
@@ -159,7 +160,8 @@ async function getStocks(isUpdate: boolean): Promise<Stock[]> {
   let stocks: Stock[] = [];
 
   if (isUpdate) {
-    stocks = getRangeStocks(1300, 8700);
+    stocks = getRangeStocks(1300, 100);
+    // stocks = getRangeStocks(1300, 8700);
     console.log(`${stocks.length}件のリクエストを送信開始`);
     stocks = await getStockInfos(stocks, 300);
   } else {
@@ -210,8 +212,8 @@ async function getStockFinancials(
 }
 
 async function scrapeKabutanStockInfo(stock: Stock): Promise<Stock | null> {
-  const client = new KabutanHttpClient(stock.info.code);
-  const response = await client.getKabutanResponse();
+  const client = new KabutanTopHttpClient(stock.info.code);
+  const response = await client.getHttpResponse();
   if (response === null) {
     return null;
   }
@@ -226,8 +228,8 @@ async function scrapeKabutanStockInfo(stock: Stock): Promise<Stock | null> {
 async function scrapeKabutanStockFinancial(
   stock: Stock
 ): Promise<Stock | null> {
-  const client = new KabutanHttpClient(stock.info.code);
-  const response = await client.getKabutanFinanceResponse();
+  const client = new KabutanFinanceHttpClient(stock.info.code);
+  const response = await client.getHttpResponse();
   if (response === null) {
     return null;
   }
