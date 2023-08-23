@@ -3,8 +3,6 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 
 // npm
-import { AxiosResponse } from "axios";
-import * as cheerio from "cheerio";
 import { parse } from "csv-parse/sync";
 import { stringify } from "csv-stringify/sync";
 import * as dotenv from "dotenv";
@@ -12,6 +10,9 @@ import * as dotenv from "dotenv";
 // src
 import { KabutanFinanceHttpClient } from "./kabutan-http-client/kabutan-finance-http-client";
 import { KabutanTopHttpClient } from "./kabutan-http-client/kabutan-top-http-client";
+
+import { KabutanFinanceHtmlParser } from "./kabutan-html-parser/kabutan-finance-html-parser";
+import { KabutanTopHtmlParser } from "./kabutan-html-parser/kabutan-top-html-parser";
 
 // types
 import { Stock, StockInfo, StockFinancial } from "../types/types";
@@ -160,7 +161,8 @@ async function getStocks(isUpdate: boolean): Promise<Stock[]> {
   let stocks: Stock[] = [];
 
   if (isUpdate) {
-    stocks = getRangeStocks(1300, 8700);
+    stocks = getRangeStocks(1300, 50);
+    // stocks = getRangeStocks(1300, 8700);
     console.log(`${stocks.length}件のリクエストを送信開始`);
     stocks = await getStockInfos(stocks, 300);
   } else {
@@ -212,14 +214,14 @@ async function getStockFinancials(
 
 async function scrapeKabutanStockInfo(stock: Stock): Promise<Stock | null> {
   const client = new KabutanTopHttpClient(stock.info.code);
-  const response = await client.getHttpResponse();
-  if (response === null) {
-    return null;
-  }
-  const info = parseStockInfo(response);
+  const html = await client.getHtml();
+
+  const parser = new KabutanTopHtmlParser(html);
+  const info = parser.getStockInfo();
   if (info === null) {
     return null;
   }
+
   stock.info = info;
   return stock;
 }
@@ -228,121 +230,14 @@ async function scrapeKabutanStockFinancial(
   stock: Stock
 ): Promise<Stock | null> {
   const client = new KabutanFinanceHttpClient(stock.info.code);
-  const response = await client.getHttpResponse();
-  if (response === null) {
+  const html = await client.getHtml();
+
+  const parser = new KabutanFinanceHtmlParser(html);
+  const finance = parser.getStockFinancial();
+  if (finance === null) {
     return null;
   }
-  const financial = parseStockFinancial(response);
-  if (financial === null) {
-    return null;
-  }
-  stock.financial = financial;
+
+  stock.financial = finance;
   return stock;
-}
-
-// HTML解析処理関連
-function parseStockInfo(response: AxiosResponse<any, any>): StockInfo | null {
-  const info = newStockInfo();
-
-  const $ = cheerio.load(response.data);
-
-  info.code = $("#stockinfo_i1")
-    .find("div.si_i1_1")
-    .find("h2")
-    .contents()
-    .eq(0)
-    .text()
-    .trim();
-  if (info.code === "") {
-    return null;
-  }
-
-  info.name = $("#kobetsu_right")
-    .find("div.company_block")
-    .find("h3")
-    .text()
-    .trim();
-  if (info.name === "") {
-    return null;
-  }
-
-  info.market = $("#stockinfo_i1")
-    .find("div.si_i1_1")
-    .find("span.market")
-    .text()
-    .trim();
-  if (!["東証Ｐ", "東証Ｓ", "東証Ｇ"].includes(info.market)) {
-    return null;
-  }
-
-  return info;
-}
-
-function parseStockFinancial(
-  response: AxiosResponse<any, any>
-): StockFinancial | null {
-  const financial = newStockFinancial();
-
-  const $ = cheerio.load(response.data);
-
-  const YoYForecasts = $("#finance_box")
-    .find("div.fin_year_t0_d.fin_year_result_d")
-    .find("table")
-    .find("tbody")
-    .find("tr")
-    .find("th:contains('前期比')")
-    .parent()
-    .children();
-
-  financial.YoYForecastNetSales = YoYForecasts.eq(1).text().trim();
-  financial.YoYForecastOperatingProfit = YoYForecasts.eq(2).text().trim();
-  financial.YoYForecastOrdinaryProfit = YoYForecasts.eq(3).text().trim();
-  financial.YoYForecastProfit = YoYForecasts.eq(4).text().trim();
-  financial.YoYForecastEarningsPerShare = YoYForecasts.eq(5).text().trim();
-
-  const YoY = $("#finance_box")
-    .find("div.fin_quarter_t0_d.fin_quarter_result_d")
-    .find("table")
-    .find("tbody")
-    .find("tr")
-    .find("th:contains('前年同期比')")
-    .parent()
-    .children();
-
-  financial.YoYNetSales = YoY.eq(1).text().trim();
-  financial.YoYOperatingProfit = YoY.eq(2).text().trim();
-  financial.YoYOrdinaryProfit = YoY.eq(3).text().trim();
-  financial.YoYProfit = YoY.eq(4).text().trim();
-  financial.YoYEarningsPerShare = YoY.eq(5).text().trim();
-
-  formatFinancial(financial);
-
-  return financial;
-}
-
-function formatFinancial(financial: StockFinancial) {
-  for (const key of Object.keys(financial) as (keyof StockFinancial)[]) {
-    const value = financial[key];
-
-    if (value === "－") {
-      financial[key] = "";
-      continue;
-    }
-
-    const isNum = value.split("").some((v) => /\d/.test(v));
-    if (!isNum) {
-      continue;
-    }
-
-    if (value.endsWith("倍")) {
-      const times = Number(value.replace("倍", ""));
-      const percent = (times - 1) * 100;
-      const raw = percent / 100;
-      financial[key] = raw.toFixed(3);
-    } else {
-      const percent = Number(value);
-      const raw = percent / 100;
-      financial[key] = raw.toFixed(3);
-    }
-  }
 }

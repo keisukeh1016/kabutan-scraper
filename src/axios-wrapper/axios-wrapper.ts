@@ -3,7 +3,7 @@ import axios, { AxiosResponse } from "axios";
 
 export class AxiosWrapper {
   // HTTPレスポンスを取得
-  public static async getHttpResponse(
+  private static async getHttpResponse(
     url: string,
     count: number
   ): Promise<AxiosResponse<any, any> | null> {
@@ -25,6 +25,7 @@ export class AxiosWrapper {
 
             const response = await this.getHttpResponse(url, count + 1);
             return response;
+
           default:
             return null;
         }
