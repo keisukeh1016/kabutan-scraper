@@ -161,8 +161,7 @@ async function getStocks(isUpdate: boolean): Promise<Stock[]> {
   let stocks: Stock[] = [];
 
   if (isUpdate) {
-    stocks = getRangeStocks(1300, 50);
-    // stocks = getRangeStocks(1300, 8700);
+    stocks = getRangeStocks(1300, 8700);
     console.log(`${stocks.length}件のリクエストを送信開始`);
     stocks = await getStockInfos(stocks, 300);
   } else {
